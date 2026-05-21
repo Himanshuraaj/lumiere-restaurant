@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/module/index.min.js" defer></script>
 <style>
 :root {
   --gold: #C9A96E;
@@ -924,27 +925,24 @@ footer {
     <p class="section-eyebrow reveal">04 — Gallery</p>
     <h2 class="section-heading reveal reveal-delay-1">Visual <em>Moments</em></h2>
   </div>
-  <div class="gallery-track" id="galleryTrack">
-    <div class="gallery-item" x-for="i in 8">
-      <div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div>
-      <div class="gallery-overlay"><div class="gallery-caption">The Kitchen</div></div>
+<div class="gallery-track" id="galleryTrack">
+  <template x-for="item in galleryImages" :key="item.id">
+    <div class="gallery-item">
+      <div class="gallery-item-inner">
+        <img :src="item.image_url" :alt="item.title" style="width:100%;height:100%;object-fit:cover;" @error="$el.parentElement.innerHTML='<div class=gallery-placeholder>✦</div>'">
+      </div>
+      <div class="gallery-overlay"><div class="gallery-caption" x-text="item.title"></div></div>
     </div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Signature Dish</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">The Cellar</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Private Room</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Chef's Table</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Sunday Brunch</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Wine Pairing</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">The Dining Room</div></div></div>
-    <!-- Duplicate for seamless loop -->
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">The Kitchen</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Signature Dish</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">The Cellar</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Private Room</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Chef's Table</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Sunday Brunch</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">Wine Pairing</div></div></div>
-    <div class="gallery-item"><div class="gallery-item-inner"><div class="gallery-placeholder">✦</div></div><div class="gallery-overlay"><div class="gallery-caption">The Dining Room</div></div></div>
+  </template>
+  <!-- Duplicate for seamless loop -->
+  <template x-for="item in galleryImages" :key="item.id + '-dup'">
+    <div class="gallery-item">
+      <div class="gallery-item-inner">
+        <img :src="item.image_url" :alt="item.title" style="width:100%;height:100%;object-fit:cover;" @error="$el.parentElement.innerHTML='<div class=gallery-placeholder>✦</div>'">
+      </div>
+      <div class="gallery-overlay"><div class="gallery-caption" x-text="item.title"></div></div>
+    </div>
+  </template>
   </div>
 </section>
 
@@ -1046,8 +1044,8 @@ footer {
         <div class="form-success" :style="bookingSuccess ? 'display:block' : ''">
           <div class="check">✓</div>
           <h3 style="font-family:var(--font-display);font-size:1.5rem;color:var(--cream);margin-bottom:0.5rem;">Reservation Confirmed</h3>
-          <p>Thank you, <span x-text="booking.firstName" style="color:var(--gold);"></span>. We've sent a confirmation to your email. We look forward to welcoming you to Lumière.</p>
-          <button class="form-submit" style="margin-top:1.5rem;" @click="bookingSuccess = false; booking = {}">Make Another Reservation</button>
+          <p>Thank you! We've sent a confirmation to your email. We look forward to welcoming you to Lumière.</p>
+          <button class="form-submit" style="margin-top:1.5rem;" @click="bookingSuccess = false">Make Another Reservation</button>
         </div>
       </div>
     </div>
@@ -1255,6 +1253,14 @@ footer {
 </div>
 
 <script>
+// Initialize Supabase Client
+let supabase = null;
+if (typeof window !== 'undefined' && window.supabase) {
+  const SUPABASE_URL = 'https://bjndvhjzcpnlwuvfhfnw.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbmR2aGp6Y3BubHd1dmZoZm53Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NzI0NjEsImV4cCI6MjA1MzI0ODQ2MX0.NlLMfxk9AKrL9KqOWMgINe2U6vkZ10r0EghPXDvxmxw';
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+
 function app() {
   return {
     // State
@@ -1276,6 +1282,7 @@ function app() {
     filterStatus: 'all',
     booking: { firstName:'', lastName:'', email:'', phone:'', date:'', time:'', guests:'2 Guests', type:'À la carte', notes:'' },
     adminStats: { covers: 42, revenue: '£18,240', pending: 7, avgSpend: '£186' },
+    galleryImages: [],
 
     // Menu data
     menus: {
@@ -1319,7 +1326,7 @@ function app() {
       return this.reservations.filter(r => r.status === this.filterStatus);
     },
 
-    init() {
+    async init() {
       // Cursor
       const cursor = document.getElementById('cursor');
       const follower = document.getElementById('cursor-follower');
@@ -1349,6 +1356,67 @@ function app() {
       // Auth state
       const saved = localStorage.getItem('lumiere_user');
       if (saved) { const u = JSON.parse(saved); this.isLoggedIn = true; this.userName = u.name; this.isAdmin = u.isAdmin; }
+      // Load gallery images from Supabase
+      this.loadGalleryImages();
+      // Load reservations from Supabase
+      this.loadReservations();
+    },
+
+    async loadGalleryImages() {
+      try {
+        if (supabase) {
+          const { data, error } = await supabase.from('gallery_images').select('*').order('order', { ascending: true });
+          if (error) throw error;
+          if (data && data.length > 0) {
+            this.galleryImages = data;
+            console.log('[v0] Loaded gallery images:', data.length);
+          } else {
+            // Use default gallery images if table is empty
+            this.loadDefaultGallery();
+          }
+        } else {
+          this.loadDefaultGallery();
+        }
+      } catch (err) {
+        console.error('[v0] Gallery load error:', err);
+        this.loadDefaultGallery();
+      }
+    },
+
+    loadDefaultGallery() {
+      this.galleryImages = [
+        { id: 1, title: 'The Kitchen', image_url: 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=400&h=500&fit=crop', order: 1 },
+        { id: 2, title: 'Signature Dish', image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=500&fit=crop', order: 2 },
+        { id: 3, title: 'The Cellar', image_url: 'https://images.unsplash.com/photo-1510812431401-41d2cab2707d?w=400&h=500&fit=crop', order: 3 },
+        { id: 4, title: 'Private Room', image_url: 'https://images.unsplash.com/photo-1517701550927-30cf4ba2fb4c?w=400&h=500&fit=crop', order: 4 },
+        { id: 5, title: 'Chef\'s Table', image_url: 'https://images.unsplash.com/photo-1504674900152-b8f055801833?w=400&h=500&fit=crop', order: 5 },
+        { id: 6, title: 'Sunday Brunch', image_url: 'https://images.unsplash.com/photo-1504674900152-b8f055801833?w=400&h=500&fit=crop', order: 6 },
+        { id: 7, title: 'Wine Pairing', image_url: 'https://images.unsplash.com/photo-1510812431401-41d2cab2707d?w=400&h=500&fit=crop', order: 7 },
+        { id: 8, title: 'The Dining Room', image_url: 'https://images.unsplash.com/photo-1517701550927-30cf4ba2fb4c?w=400&h=500&fit=crop', order: 8 },
+      ];
+    },
+
+    async loadReservations() {
+      try {
+        if (supabase) {
+          const { data, error } = await supabase.from('reservations').select('*').order('date', { ascending: false });
+          if (error) throw error;
+          if (data && data.length > 0) {
+            this.reservations = data.map(r => ({
+              name: (r.first_name || '') + ' ' + (r.last_name || ''),
+              email: r.email,
+              date: r.date,
+              time: r.time,
+              guests: r.guests,
+              type: r.type,
+              status: r.status || 'pending'
+            }));
+            console.log('[v0] Loaded reservations:', data.length);
+          }
+        }
+      } catch (err) {
+        console.error('[v0] Reservations load error:', err);
+      }
     },
 
     handleAuth() {
@@ -1386,39 +1454,88 @@ function app() {
       this.showAdmin = false;
     },
 
-    submitBooking() {
+    async submitBooking() {
       if (!this.booking.firstName || !this.booking.email || !this.booking.date || !this.booking.time) {
         alert('Please fill in all required fields.');
         return;
       }
       this.bookingLoading = true;
-      setTimeout(() => {
+      try {
+        if (supabase) {
+          const { data, error } = await supabase.from('reservations').insert([{
+            first_name: this.booking.firstName,
+            last_name: this.booking.lastName || '',
+            email: this.booking.email,
+            phone: this.booking.phone || '',
+            date: this.booking.date,
+            time: this.booking.time,
+            guests: this.booking.guests,
+            type: this.booking.type,
+            notes: this.booking.notes || '',
+            status: 'pending'
+          }]);
+          if (error) throw error;
+          // Add to local reservations for instant UI update
+          this.reservations.unshift({
+            name: this.booking.firstName + ' ' + (this.booking.lastName || ''),
+            email: this.booking.email,
+            date: this.booking.date,
+            time: this.booking.time,
+            guests: this.booking.guests,
+            type: this.booking.type,
+            status: 'pending'
+          });
+          this.adminStats.pending++;
+        }
         this.bookingLoading = false;
         this.bookingSuccess = true;
-        // Add to reservations
-        this.reservations.unshift({
-          name: this.booking.firstName + ' ' + this.booking.lastName,
-          email: this.booking.email,
-          date: this.booking.date,
-          time: this.booking.time,
-          guests: this.booking.guests,
-          type: this.booking.type,
-          status: 'pending'
-        });
-        this.adminStats.pending++;
-      }, 1500);
+        // Clear form fields
+        this.booking = { firstName:'', lastName:'', email:'', phone:'', date:'', time:'', guests:'2 Guests', type:'À la carte', notes:'' };
+        // Reset success message after 3 seconds
+        setTimeout(() => { this.bookingSuccess = false; }, 3000);
+      } catch (err) {
+        console.error('[v0] Booking error:', err);
+        this.bookingLoading = false;
+        alert('Booking failed: ' + (err.message || 'Unknown error'));
+      }
     },
 
-    confirmRes(i) {
+    async confirmRes(i) {
       const real = this.reservations.indexOf(this.filteredReservations[i]);
+      const reservation = this.reservations[real];
       this.reservations[real].status = 'confirmed';
       this.adminStats.pending = Math.max(0, this.adminStats.pending - 1);
+      // Update in Supabase
+      if (supabase && reservation.email) {
+        try {
+          const { error } = await supabase.from('reservations')
+            .update({ status: 'confirmed' })
+            .eq('email', reservation.email)
+            .eq('date', reservation.date);
+          if (error) console.error('[v0] Error confirming reservation:', error);
+        } catch (err) {
+          console.error('[v0] Confirm error:', err);
+        }
+      }
     },
 
-    cancelRes(i) {
+    async cancelRes(i) {
       const real = this.reservations.indexOf(this.filteredReservations[i]);
+      const reservation = this.reservations[real];
       if(this.reservations[real].status === 'pending') this.adminStats.pending = Math.max(0, this.adminStats.pending - 1);
       this.reservations[real].status = 'cancelled';
+      // Update in Supabase
+      if (supabase && reservation.email) {
+        try {
+          const { error } = await supabase.from('reservations')
+            .update({ status: 'cancelled' })
+            .eq('email', reservation.email)
+            .eq('date', reservation.date);
+          if (error) console.error('[v0] Error cancelling reservation:', error);
+        } catch (err) {
+          console.error('[v0] Cancel error:', err);
+        }
+      }
     },
 
     filterBookings(val) { this.filterStatus = val; },
