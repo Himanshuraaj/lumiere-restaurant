@@ -1,0 +1,19 @@
+{
+  "name": "lumiere-restaurant",
+  "version": "1.0.0",
+  "description": "Lumière - A Fine Dining Restaurant Website with Supabase Integration",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'Static HTML - no build needed'",
+    "start": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "restaurant",
+    "fine-dining",
+    "booking",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT"
+}
